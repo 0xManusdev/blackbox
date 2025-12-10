@@ -11,7 +11,7 @@ export default function Page() {
 	const [currentScreen, setCurrentScreen] = useState<Screen>("home")
 
 	return (
-		<main className="min-h-screen bg-background">
+		<main className="min-h-screen bg-background max-w-4xl mx-auto">
 			{currentScreen === "home" && (
 				<HomeScreen onStartReport={() => setCurrentScreen("form")} />
 			)}

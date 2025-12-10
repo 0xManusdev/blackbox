@@ -11,14 +11,14 @@ export function ConfirmationScreen({ onBackHome }: ConfirmationScreenProps) {
 	return (
 		<div className="flex flex-col min-h-screen px-6 py-8">
 			{/* Header */}
-			<header className="flex items-center justify-center">
+			{/* <header className="flex items-center justify-center">
 				<div className="flex items-center gap-2">
 					<div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
 						<span className="text-primary-foreground font-bold text-sm">B</span>
 					</div>
 					<span className="font-semibold text-foreground">Blackbox</span>
 				</div>
-			</header>
+			</header> */}
 
 			{/* Main Content */}
 			<div className="flex-1 flex flex-col items-center justify-center text-center gap-8 py-12">
@@ -41,7 +41,7 @@ export function ConfirmationScreen({ onBackHome }: ConfirmationScreenProps) {
 					onClick={onBackHome}
 					variant="outline"
 					size="lg"
-					className="w-full rounded-full h-10 text-base font-semibold border-primary text-primary hover:bg-secondary bg-transparent"
+					className="w-full rounded-full cursor-pointer h-10 text-base font-semibold border-primary text-primary hover:bg-secondary bg-transparent"
 				>
 					Retour à l'accueil
 				</Button>

@@ -145,7 +145,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					<Label className="text-xs font-bold">Pièces jointes</Label>
 
 					{/* Attachment buttons */}
-					<div className="flex border border-dashed border-border w-full rounded-sm flex-1 items-center justify-center h-24 gap-3">
+					<div className="flex border-2 border-dashed border-border hover:border-primary hover:cursor-pointer w-full rounded-sm flex-1 items-center justify-center h-24 gap-3">
 						<UploadIcon/>
 						{/* <p className="text-xs text-muted-foreground">Ajouter des pièces jointes</p> */}
 					</div>
