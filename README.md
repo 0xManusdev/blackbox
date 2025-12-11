@@ -13,17 +13,16 @@ Application Next.js permettant de déposer rapidement un signalement anonyme pou
 - Personnalisation rapide
 - Intégration backend (à brancher)
 - Déploiement
-- Qualité & tests
-- Limites connues / pistes d’amélioration
 
-## Contexte & objectifs
+
+## Objectifs
 - Offrir un canal simple et anonyme de signalement d’incident pour l’AIGE.
 - Minimiser la friction : peu de champs, CTA(Call To Action) clair, retour visuel immédiat.
 - Préparer l’app pour un branchement backend (envoi du signalement et upload des pièces jointes).
 
 ## Parcours utilisateur (UX)
 1) Accueil : présentation brève + bouton “Faire un signalement”.
-2) Formulaire : saisie des infos (zone, heure, description) et ajout de pièces jointes (UI prête, logique à brancher).
+2) Formulaire : saisie des informations (zone, heure, description) et ajout de pièces jointes.
 3) Confirmation : message de succès et bouton “Retour à l’accueil”.
 
 ## Fonctionnalités par écran
@@ -33,8 +32,8 @@ Application Next.js permettant de déposer rapidement un signalement anonyme pou
 - `ReportFormScreen`
   - Zone/Lieu : liste prédéfinie + option “Autre” avec champ libre.
   - Heure : pré-remplie à l’ouverture (format 24h), modifiable.
-  - Description : zone de texte, bouton d’icône dictée vocale (UI, logique à brancher).
-  - Pièces jointes : bloc drag/click (UI) et prévisualisations simulées. Limite affichée : 3 fichiers, 5 Mo chacun (validation/back-end à ajouter).
+  - Description : zone de texte, bouton d’icône dictée vocale.
+  - Pièces jointes : bloc drag/click (UI) et prévisualisations simulées. 
   - Bouton “Envoyer anonymement”.
 - `ConfirmationScreen`
   - Icône de succès, message de confirmation, bouton “Retour à l’accueil”.
@@ -42,7 +41,7 @@ Application Next.js permettant de déposer rapidement un signalement anonyme pou
 
 ## Stack & prérequis
 - Framework : Next.js 16 (App Router), React 19, TypeScript.
-- UI : Tailwind CSS v4, composants shadcn/Radix (boutons, inputs, select, etc.), lucide-react pour les icônes.
+- UI : Tailwind CSS v4, composants shadcn/Radix (boutons, inputs, select), lucide-react pour les icônes.
 - Thème : variables CSS (clair/sombre) dans `app/globals.css`; provider `components/theme-provider.tsx` (next-themes).
 - Analytics : `@vercel/analytics` intégré dans le layout.
 - Node.js : v22. 
@@ -68,10 +67,9 @@ pnpm start        # lancer le build en production
 - `public/*` : assets (logo, fond, placeholders, icônes clair/sombre).
 - `components/theme-provider.tsx` : wrapper next-themes.
 
-## Thème, design & assets
+## Thème, design
 - Couleurs et rayons configurés dans `app/globals.css` (tokens CSS custom + `@theme inline` pour Tailwind v4).
 - Mode sombre déjà stylé : bascule possible en ajoutant la logique next-themes.
-- Assets à remplacer : `public/box.png`, `public/bg.jpg`, icônes `icon-*.png/svg`, placeholders.
 
 ## Personnalisation rapide
 - Branding : remplacement des assets dans `public/` et ajustement des textes dans `components/screens/*`.
