@@ -12,6 +12,22 @@ interface ConfirmationScreenProps {
 }
 
 export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenProps) {
+	// Validate reportId before attempting to fetch data
+	if (!reportId) {
+		return (
+			<div className="flex flex-col items-center justify-center min-h-screen bg-background p-6">
+				<Alert variant="destructive" className="max-w-md">
+					<AlertCircle className="h-4 w-4" />
+					<AlertDescription>
+						Identifiant de rapport invalide.
+					</AlertDescription>
+				</Alert>
+				<Button onClick={onBackHome} className="mt-4">
+					Retour à l'accueil
+				</Button>
+			</div>
+		)
+	}
 	const { data: report, isLoading: reportLoading, isError: reportError } = useReport(reportId)
 	const { data: verification, isLoading: verifyLoading } = useVerifyReport(reportId)
 
