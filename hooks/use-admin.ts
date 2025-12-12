@@ -11,7 +11,7 @@ export function useAllReports() {
 			const response = await api.get<ReportsListResponse>('/api/reports');
 			return response.data;
 		},
-		refetchInterval: 5000, // Rafraîchir toutes les 5 secondes pour temps réel
+		refetchInterval: 30000, // Rafraîchir toutes les 30 secondes pour limiter la charge serveur
 		refetchOnWindowFocus: true, // Rafraîchir quand on revient sur la page
 		refetchOnMount: true, // Rafraîchir au montage
 	});
