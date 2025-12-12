@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Mic, X, MapPin, Clock, UploadIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import { useZones, useSubmitReport } from "@/hooks/use-reports"
 import { removeMetadataFromFiles } from "@/lib/remove-metadata"
+import { useToast } from "@/hooks/use-toast"
 
 interface ReportFormScreenProps {
 	onBack: () => void
@@ -31,6 +32,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 
 	const { data: zones, isLoading: zonesLoading } = useZones()
 	const submitMutation = useSubmitReport()
+	const { toast } = useToast()
 
 	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files) {
@@ -39,7 +41,11 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				const selectedFiles = Array.from(e.target.files).slice(0, 3)
 				const validFiles = selectedFiles.filter(file => {
 					if (file.size > 5 * 1024 * 1024) {
-						alert(`Le fichier ${file.name} dépasse 5MB`)
+						toast({
+							variant: "destructive",
+							title: "Fichier trop volumineux",
+							description: `Le fichier ${file.name} dépasse 5MB`
+						})
 						return false
 					}
 					return true
@@ -50,7 +56,11 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				setFiles(cleanedFiles)
 			} catch (error) {
 				console.error('Error processing files:', error)
-				alert('Erreur lors du traitement des fichiers')
+				toast({
+					variant: "destructive",
+					title: "Erreur",
+					description: "Erreur lors du traitement des fichiers"
+				})
 			} finally {
 				setIsProcessingFiles(false)
 			}
@@ -69,22 +79,38 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 		e.preventDefault()
 
 		if (!zone) {
-			alert("Veuillez sélectionner une zone")
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez sélectionner une zone"
+			})
 			return
 		}
 
 		if (zone === "AUTRE" && !customZone.trim()) {
-			alert("Veuillez préciser la zone personnalisée")
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez préciser la zone personnalisée"
+			})
 			return
 		}
 
 		if (!incidentTime) {
-			alert("Veuillez sélectionner l'heure de l'incident")
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez sélectionner l'heure de l'incident"
+			})
 			return
 		}
 
 		if (!description.trim()) {
-			alert("Veuillez décrire l'incident")
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez décrire l'incident"
+			})
 			return
 		}
 
@@ -101,7 +127,11 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					onSubmit(data.id)
 				},
 				onError: (error: any) => {
-					alert(error.response?.data?.message || "Une erreur est survenue lors de la soumission")
+					toast({
+						variant: "destructive",
+						title: "Erreur de soumission",
+						description: error.response?.data?.message || "Une erreur est survenue lors de la soumission"
+					})
 				},
 			}
 		)
