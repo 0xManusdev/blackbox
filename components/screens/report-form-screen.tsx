@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Mic, X, MapPin, Clock, UploadIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import { useZones, useSubmitReport } from "@/hooks/use-reports"
+import { removeMetadataFromFiles } from "@/lib/remove-metadata"
 
 interface ReportFormScreenProps {
 	onBack: () => void
@@ -25,22 +26,34 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 	})
 	const [description, setDescription] = useState("")
 	const [files, setFiles] = useState<File[]>([])
+	const [isProcessingFiles, setIsProcessingFiles] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const { data: zones, isLoading: zonesLoading } = useZones()
 	const submitMutation = useSubmitReport()
 
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files) {
-			const selectedFiles = Array.from(e.target.files).slice(0, 3)
-			const validFiles = selectedFiles.filter(file => {
-				if (file.size > 5 * 1024 * 1024) {
-					alert(`Le fichier ${file.name} dépasse 5MB`)
-					return false
-				}
-				return true
-			})
-			setFiles(validFiles)
+			setIsProcessingFiles(true)
+			try {
+				const selectedFiles = Array.from(e.target.files).slice(0, 3)
+				const validFiles = selectedFiles.filter(file => {
+					if (file.size > 5 * 1024 * 1024) {
+						alert(`Le fichier ${file.name} dépasse 5MB`)
+						return false
+					}
+					return true
+				})
+				
+				// Remove metadata from images before setting state
+				const cleanedFiles = await removeMetadataFromFiles(validFiles)
+				setFiles(cleanedFiles)
+			} catch (error) {
+				console.error('Error processing files:', error)
+				alert('Erreur lors du traitement des fichiers')
+			} finally {
+				setIsProcessingFiles(false)
+			}
 		}
 	}
 
@@ -95,7 +108,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 	}
 
 	const showCustomInput = zone === "AUTRE"
-	const isSubmitting = submitMutation.isPending
+	const isSubmitting = submitMutation.isPending || isProcessingFiles
 	const isSuccess = submitMutation.isSuccess
 
 	return (
@@ -231,10 +244,21 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 						disabled={isSubmitting || files.length >= 3}
 						className="flex border-2 border-dashed border-border hover:border-primary hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed w-full rounded-sm items-center justify-center h-24 gap-3 transition-colors"
 					>
-						<UploadIcon className="w-6 h-6 text-muted-foreground" />
-						<span className="text-xs text-muted-foreground">
-							{files.length >= 3 ? "Maximum 3 fichiers" : "Cliquez pour ajouter des fichiers"}
-						</span>
+						{isProcessingFiles ? (
+							<>
+								<Loader2 className="w-6 h-6 text-primary animate-spin" />
+								<span className="text-xs text-muted-foreground">
+									Traitement des images...
+								</span>
+							</>
+						) : (
+							<>
+								<UploadIcon className="w-6 h-6 text-muted-foreground" />
+								<span className="text-xs text-muted-foreground">
+									{files.length >= 3 ? "Maximum 3 fichiers" : "Cliquez pour ajouter des fichiers"}
+								</span>
+							</>
+						)}
 					</button>
 
 					{files.length > 0 && (
@@ -261,7 +285,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					)}
 
 					<p className="text-xs text-muted-foreground">
-						Maximum 3 fichiers, 5MB par fichier. Formats acceptés: images, PDF.
+						Maximum 3 fichiers, 5MB par fichier. Formats acceptés: images, PDF. Les métadonnées des images sont automatiquement supprimées.
 					</p>
 				</div>
 

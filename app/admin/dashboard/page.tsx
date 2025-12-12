@@ -18,6 +18,8 @@ import type { Report } from "@/lib/types"
 
 const getSeverityColor = (severity: string) => {
 	switch (severity) {
+		case "critical":
+			return "destructive"
 		case "high":
 			return "destructive"
 		case "medium":
@@ -31,6 +33,8 @@ const getSeverityColor = (severity: string) => {
 
 const getSeverityLabel = (severity: string) => {
 	switch (severity) {
+		case "critical":
+			return "Critique"
 		case "high":
 			return "Élevée"
 		case "medium":
@@ -42,10 +46,52 @@ const getSeverityLabel = (severity: string) => {
 	}
 }
 
+const getCategoryLabel = (category: string) => {
+	switch (category) {
+		case "SECURITE_PHYSIQUE":
+			return "Sécurité Physique"
+		case "SECURITE_AERIENNE":
+			return "Sécurité Aérienne"
+		case "INCIDENT_TECHNIQUE":
+			return "Incident Technique"
+		case "PROCEDURE_NON_RESPECTEE":
+			return "Procédure Non Respectée"
+		case "COMPORTEMENT_SUSPECT":
+			return "Comportement Suspect"
+		case "ACCES_NON_AUTORISE":
+			return "Accès Non Autorisé"
+		default:
+			return category.replace(/_/g, ' ')
+	}
+}
+
+const getZoneLabel = (zone: string) => {
+	switch (zone) {
+		case "TERMINAL_1":
+			return "Terminal 1"
+		case "TERMINAL_2":
+			return "Terminal 2"
+		case "PORTES_EMBARQUEMENT":
+			return "Portes d'embarquement"
+		case "ZONE_DOUANES":
+			return "Zone de douanes"
+		case "PARKING":
+			return "Parking"
+		case "HALL_ARRIVEE":
+			return "Hall d'arrivée"
+		case "HALL_DEPART":
+			return "Hall de départ"
+		case "ZONE_TRANSIT":
+			return "Zone de transit"
+		default:
+			return zone
+	}
+}
+
 export default function AdminDashboardPage() {
 	const router = useRouter()
-	const { data: user, isLoading: userLoading } = useCurrentUser()
-	const { data: reportsData, isLoading: reportsLoading } = useAllReports()
+	const { data: user, isLoading: userLoading, isError: userError } = useCurrentUser()
+	const { data: reportsData, isLoading: reportsLoading, isFetching: reportsFetching } = useAllReports()
 	const resolveMutation = useResolveReport()
 	const deleteMutation = useDeleteReport()
 	const logoutMutation = useLogout()
@@ -64,20 +110,22 @@ export default function AdminDashboardPage() {
 	const [currentPage, setCurrentPage] = useState(1)
 	const itemsPerPage = 10
 
-	// Redirect if not authenticated (only after loading is complete)
+	// Redirect if not authenticated
 	useEffect(() => {
-		if (!userLoading && !user) {
-			router.push("/admin")
+		if (!userLoading && (userError || !user)) {
+			router.replace("/admin")
 		}
-	}, [user, userLoading, router])
+	}, [user, userLoading, userError, router])
 
 	// Get reports and calculate stats
 	const reports = reportsData?.data || []
+	
 	const stats = useMemo(() => ({
 		total: reports.length,
-		pending: reports.filter((r: Report) => r.status !== "resolved").length,
-		resolved: reports.filter((r: Report) => r.status === "resolved").length,
+		pending: reports.filter((r: Report) => !r.resolvedAt).length,
+		resolved: reports.filter((r: Report) => !!r.resolvedAt).length,
 		highSeverity: reports.filter((r: Report) => r.severity === "high").length,
+		critical: reports.filter((r: Report) => r.severity === "critical").length,
 	}), [reports])
 
 	// Apply filters
@@ -86,7 +134,7 @@ export default function AdminDashboardPage() {
 
 		if (statusFilter !== "all") {
 			filtered = filtered.filter((r) => 
-				statusFilter === "resolved" ? r.status === "resolved" : r.status !== "resolved"
+				statusFilter === "resolved" ? !!r.resolvedAt : !r.resolvedAt
 			)
 		}
 
@@ -180,8 +228,18 @@ export default function AdminDashboardPage() {
 				{/* Header with Logout */}
 				<div className="flex items-center justify-between">
 					<div className="space-y-2">
-						<h1 className="text-3xl font-bold tracking-tight">Tableau de bord Admin</h1>
-						<p className="text-muted-foreground">Gestion des signalements de la plateforme Blackbox</p>
+						<div className="flex items-center gap-3">
+							<h1 className="text-3xl font-bold tracking-tight">Tableau de bord Admin</h1>
+							{reportsFetching && !reportsLoading && (
+								<div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+									<div className="h-2 w-2 rounded-full bg-green-500 animate-ping" />
+									Actualisation...
+								</div>
+							)}
+						</div>
+						<p className="text-muted-foreground">
+							Gestion des signalements de la plateforme Blackbox • Mise à jour automatique toutes les 5 secondes
+						</p>
 					</div>
 					<Button variant="outline" onClick={handleLogout} disabled={logoutMutation.isPending}>
 						<LogOut className="h-4 w-4 mr-2" />
@@ -190,41 +248,51 @@ export default function AdminDashboardPage() {
 				</div>
 
 				{/* Stats Cards */}
-				<div className="grid gap-4 md:grid-cols-4">
-					<Card>
+				<div className="grid gap-4 md:grid-cols-5">
+					<Card className={reportsFetching ? "ring-2 ring-primary/20 transition-all" : "transition-all"}>
 						<CardHeader className="pb-3">
 							<CardDescription>Total</CardDescription>
-							<CardTitle className="text-3xl">{stats.total}</CardTitle>
+							<CardTitle className="text-3xl transition-all duration-300">{stats.total}</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<FileText className="h-4 w-4 text-muted-foreground" />
 						</CardContent>
 					</Card>
 
-					<Card>
+					<Card className={reportsFetching ? "ring-2 ring-primary/20 transition-all" : "transition-all"}>
 						<CardHeader className="pb-3">
 							<CardDescription>En attente</CardDescription>
-							<CardTitle className="text-3xl">{stats.pending}</CardTitle>
+							<CardTitle className="text-3xl transition-all duration-300">{stats.pending}</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<Clock className="h-4 w-4 text-yellow-500" />
 						</CardContent>
 					</Card>
 
-					<Card>
+					<Card className={reportsFetching ? "ring-2 ring-primary/20 transition-all" : "transition-all"}>
 						<CardHeader className="pb-3">
 							<CardDescription>Résolus</CardDescription>
-							<CardTitle className="text-3xl">{stats.resolved}</CardTitle>
+							<CardTitle className="text-3xl transition-all duration-300">{stats.resolved}</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<CheckCircle2 className="h-4 w-4 text-green-500" />
 						</CardContent>
 					</Card>
 
-					<Card>
+					<Card className={reportsFetching ? "ring-2 ring-primary/20 transition-all" : "transition-all"}>
 						<CardHeader className="pb-3">
 							<CardDescription>Priorité élevée</CardDescription>
-							<CardTitle className="text-3xl">{stats.highSeverity}</CardTitle>
+							<CardTitle className="text-3xl transition-all duration-300">{stats.highSeverity}</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<AlertTriangle className="h-4 w-4 text-orange-500" />
+						</CardContent>
+					</Card>
+
+					<Card className={reportsFetching ? "ring-2 ring-primary/20 transition-all" : "transition-all"}>
+						<CardHeader className="pb-3">
+							<CardDescription>Critiques</CardDescription>
+							<CardTitle className="text-3xl transition-all duration-300">{stats.critical}</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<AlertTriangle className="h-4 w-4 text-red-500" />
@@ -282,6 +350,7 @@ export default function AdminDashboardPage() {
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="all">Toutes</SelectItem>
+										<SelectItem value="critical">Critique</SelectItem>
 										<SelectItem value="high">Élevée</SelectItem>
 										<SelectItem value="medium">Moyenne</SelectItem>
 										<SelectItem value="low">Faible</SelectItem>
@@ -299,7 +368,7 @@ export default function AdminDashboardPage() {
 										<SelectItem value="all">Toutes</SelectItem>
 										{categories.map((category) => (
 											<SelectItem key={category} value={category}>
-												{category}
+												{getCategoryLabel(category)}
 											</SelectItem>
 										))}
 									</SelectContent>
@@ -376,14 +445,24 @@ export default function AdminDashboardPage() {
 											className="cursor-pointer"
 											onClick={() => setSelectedReport(report)}
 										>
-											<TableCell className="font-medium">#{report.id}</TableCell>
+											<TableCell className="font-medium">
+												<div className="flex items-center gap-2">
+													#{report.id}
+													{/* Badge "Nouveau" si créé il y a moins de 1 minute */}
+													{new Date(report.createdAt).getTime() > Date.now() - 60000 && (
+														<Badge variant="default" className="bg-green-500 text-white text-xs">
+															Nouveau
+														</Badge>
+													)}
+												</div>
+											</TableCell>
 											<TableCell>
 												<div className="flex items-center gap-2">
 													<MapPin className="h-4 w-4 text-muted-foreground" />
-													{report.customZone || report.zone}
+													{report.customZone || getZoneLabel(report.zone)}
 												</div>
 											</TableCell>
-											<TableCell>{report.category}</TableCell>
+											<TableCell>{getCategoryLabel(report.category)}</TableCell>
 											<TableCell>
 												<Badge variant={getSeverityColor(report.severity) as any}>
 													{getSeverityLabel(report.severity)}
@@ -396,7 +475,7 @@ export default function AdminDashboardPage() {
 												</div>
 											</TableCell>
 											<TableCell>
-												{report.status === "resolved" ? (
+												{report.resolvedAt ? (
 													<Badge variant="secondary">
 														<CheckCircle2 className="h-3 w-3" />
 														Résolu
@@ -410,7 +489,7 @@ export default function AdminDashboardPage() {
 											</TableCell>
 											<TableCell className="text-right">
 												<div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-													{report.status !== "resolved" && (
+													{!report.resolvedAt && (
 														<Button
 															size="sm"
 															variant="outline"
@@ -449,7 +528,7 @@ export default function AdminDashboardPage() {
 										<div className="grid grid-cols-2 gap-4">
 											<div>
 												<p className="text-sm font-medium text-foreground">Zone</p>
-												<p className="text-sm text-muted-foreground">{selectedReport.customZone || selectedReport.zone}</p>
+												<p className="text-sm text-muted-foreground">{selectedReport.customZone || getZoneLabel(selectedReport.zone)}</p>
 											</div>
 											<div>
 												<p className="text-sm font-medium text-foreground">Heure de l&apos;incident</p>
@@ -457,7 +536,7 @@ export default function AdminDashboardPage() {
 											</div>
 											<div>
 												<p className="text-sm font-medium text-foreground">Catégorie</p>
-												<p className="text-sm text-muted-foreground">{selectedReport.category}</p>
+												<p className="text-sm text-muted-foreground">{getCategoryLabel(selectedReport.category)}</p>
 											</div>
 											<div>
 												<p className="text-sm font-medium text-foreground">Sévérité</p>

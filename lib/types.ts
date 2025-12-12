@@ -40,7 +40,7 @@ export interface Report {
   customZone: string | null;
   incidentTime: string;
   category: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
   anonymizedContent: string;
   attachments: string[];
   blockchainTxHash: string | null;

@@ -34,11 +34,10 @@ export function useLogin() {
 			);
 			return response.data;
 		},
-		onSuccess: async (data) => {
-			// Set the user data immediately in cache
+		onSuccess: (data) => {
+			// Le cookie HTTP-only est déjà défini par le backend
+			// On stocke juste les données utilisateur dans le cache
 			queryClient.setQueryData(['currentUser'], data.data.admin);
-			// Refetch to ensure we have the latest data from server with proper cookies
-			await queryClient.refetchQueries({ queryKey: ['currentUser'] });
 		},
 	});
 }
@@ -51,8 +50,7 @@ export function useCurrentUser() {
 			const response = await api.get<ApiResponse<Admin>>('/api/auth/me');
 			return response.data.data;
 		},
-		retry: 1,
-		retryDelay: 500,
+		retry: false, // Don't retry on 401 to avoid loops
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	});
 }
@@ -77,6 +75,8 @@ export function useLogout() {
 			return response.data;
 		},
 		onSuccess: () => {
+			// Le cookie HTTP-only est déjà supprimé par le backend
+			// On vide juste le cache React Query
 			queryClient.clear();
 		},
 	});

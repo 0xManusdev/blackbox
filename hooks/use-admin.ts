@@ -11,7 +11,9 @@ export function useAllReports() {
 			const response = await api.get<ReportsListResponse>('/api/reports');
 			return response.data;
 		},
-		refetchInterval: 30000,
+		refetchInterval: 5000, // Rafraîchir toutes les 5 secondes pour temps réel
+		refetchOnWindowFocus: true, // Rafraîchir quand on revient sur la page
+		refetchOnMount: true, // Rafraîchir au montage
 	});
 }
 

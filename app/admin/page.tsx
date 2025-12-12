@@ -1,28 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Shield, Loader2 } from "lucide-react"
-import { useLogin } from "@/hooks/use-auth"
+import { useLogin, useCurrentUser } from "@/hooks/use-auth"
 
 export default function AdminLoginPage() {
 	const router = useRouter()
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
 	const loginMutation = useLogin()
+	const { data: currentUser, isLoading: checkingAuth } = useCurrentUser()
+
+	// Redirect to dashboard if already logged in
+	useEffect(() => {
+		if (currentUser) {
+			router.replace("/admin/dashboard")
+		}
+	}, [currentUser, router])
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault()
 		
 		loginMutation.mutate({ email, password }, {
-			onSuccess: () => {
+			onSuccess: (data) => {
+				// Navigate to dashboard
 				router.push("/admin/dashboard")
 			},
 		})
+	}
+
+	// Show loading while checking auth
+	if (checkingAuth) {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+					<p className="text-muted-foreground">Vérification...</p>
+				</div>
+			</div>
+		)
+	}
+
+	// Don't render login form if already authenticated
+	if (currentUser) {
+		return null
 	}
 
 	return (
