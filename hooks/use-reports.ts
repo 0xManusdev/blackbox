@@ -9,32 +9,14 @@ import type {
 	ApiResponse,
 } from '@/lib/types';
 
-// Zones définies selon le schema Prisma (enum Zone)
-const DEFAULT_ZONES: Zone[] = [
-	{ value: "TERMINAL_1", label: "Terminal 1" },
-	{ value: "TERMINAL_2", label: "Terminal 2" },
-	{ value: "PORTES_EMBARQUEMENT", label: "Portes d'embarquement" },
-	{ value: "ZONE_DOUANES", label: "Zone de douanes" },
-	{ value: "PARKING", label: "Parking" },
-	{ value: "HALL_ARRIVEE", label: "Hall d'arrivée" },
-	{ value: "HALL_DEPART", label: "Hall de départ" },
-	{ value: "ZONE_TRANSIT", label: "Zone de transit" },
-	{ value: "AUTRE", label: "Autre (préciser)" }
-];
-
 // Get available zones
+// If the API call fails, an error will be thrown and can be handled by the UI.
 export function useZones() {
 	return useQuery({
 		queryKey: ['zones'],
 		queryFn: async () => {
-			try {
-				const response = await api.get<ApiResponse<Zone[]>>('/api/zones');
-				return response.data.data;
-			} catch (error) {
-				console.warn('API zones non disponible, utilisation des zones du schéma Prisma', error);
-				// Retourner les zones par défaut du schéma Prisma si l'API n'est pas disponible
-				return DEFAULT_ZONES;
-			}
+			const response = await api.get<ApiResponse<Zone[]>>('/api/zones');
+			return response.data.data;
 		},
 		staleTime: Infinity,
 		retry: false, // Ne pas réessayer en cas d'échec
