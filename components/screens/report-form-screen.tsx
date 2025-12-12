@@ -1,170 +1,311 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Mic, Camera, Video, X, MapPin, Clock, UploadIcon } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ArrowLeft, Mic, X, MapPin, Clock, UploadIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { useZones, useSubmitReport } from "@/hooks/use-reports"
+import { removeMetadataFromFiles } from "@/lib/remove-metadata"
+import { useToast } from "@/hooks/use-toast"
 
 interface ReportFormScreenProps {
 	onBack: () => void
-	onSubmit: () => void
+	onSubmit: (reportId: number) => void
 }
 
-const LOCATIONS = [
-	"Terminal 1",
-	"Terminal 2",
-	"Portes d'embarquement",
-	"Zone de douanes",
-	"Parking",
-	"Hall d'arrivée",
-	"Hall de départ",
-	"Zone de transit",
-	"Autre (saisir manuellement)",
-]
-
 export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
-	const [location, setLocation] = useState("")
-	const [customLocation, setCustomLocation] = useState("")
-	const [time, setTime] = useState(() => {
+	const [zone, setZone] = useState("")
+	const [customZone, setCustomZone] = useState("")
+	const [incidentTime, setIncidentTime] = useState(() => {
 		const now = new Date()
-		return now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+		return now.toTimeString().slice(0, 5)
 	})
 	const [description, setDescription] = useState("")
-	const [attachments, setAttachments] = useState<{ type: "photo" | "video"; name: string }[]>([])
+	const [files, setFiles] = useState<File[]>([])
+	const [isProcessingFiles, setIsProcessingFiles] = useState(false)
+	const fileInputRef = useRef<HTMLInputElement>(null)
 
-	const handleAddAttachment = (type: "photo" | "video") => {
-		if (attachments.length < 3) {
-			setAttachments([...attachments, { type, name: `${type}_${attachments.length + 1}` }])
+	const { data: zones, isLoading: zonesLoading } = useZones()
+	const submitMutation = useSubmitReport()
+	const { toast } = useToast()
+
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (e.target.files) {
+			setIsProcessingFiles(true)
+			try {
+				const selectedFiles = Array.from(e.target.files).slice(0, 3)
+				const validFiles = selectedFiles.filter(file => {
+					if (file.size > 5 * 1024 * 1024) {
+						toast({
+							variant: "destructive",
+							title: "Fichier trop volumineux",
+							description: `Le fichier ${file.name} dépasse 5MB`
+						})
+						return false
+					}
+					return true
+				})
+				
+				// Remove metadata from images before setting state
+				const cleanedFiles = await removeMetadataFromFiles(validFiles)
+				setFiles(cleanedFiles)
+			} catch (error) {
+				console.error('Error processing files:', error)
+				toast({
+					variant: "destructive",
+					title: "Erreur",
+					description: "Erreur lors du traitement des fichiers"
+				})
+			} finally {
+				setIsProcessingFiles(false)
+			}
 		}
 	}
 
-	const handleRemoveAttachment = (index: number) => {
-		setAttachments(attachments.filter((_, i) => i !== index))
+	const handleRemoveFile = (index: number) => {
+		setFiles(files.filter((_, i) => i !== index))
 	}
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleUploadClick = () => {
+		fileInputRef.current?.click()
+	}
+
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		onSubmit()
+
+		if (!zone) {
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez sélectionner une zone"
+			})
+			return
+		}
+
+		if (zone === "AUTRE" && !customZone.trim()) {
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez préciser la zone personnalisée"
+			})
+			return
+		}
+
+		if (!incidentTime) {
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez sélectionner l'heure de l'incident"
+			})
+			return
+		}
+
+		if (!description.trim()) {
+			toast({
+				variant: "destructive",
+				title: "Champ requis",
+				description: "Veuillez décrire l'incident"
+			})
+			return
+		}
+
+		submitMutation.mutate(
+			{
+				zone,
+				customZone: zone === "AUTRE" ? customZone : undefined,
+				incidentTime,
+				description,
+				attachments: files.length > 0 ? files : undefined,
+			},
+			{
+				onSuccess: (data) => {
+					onSubmit(data.id)
+				},
+				onError: (error: any) => {
+					toast({
+						variant: "destructive",
+						title: "Erreur de soumission",
+						description: error.response?.data?.message || "Une erreur est survenue lors de la soumission"
+					})
+				},
+			}
+		)
 	}
 
-	const showCustomInput = location === "Autre (saisir manuellement)"
+	const showCustomInput = zone === "AUTRE"
+	const isSubmitting = submitMutation.isPending || isProcessingFiles
+	const isSuccess = submitMutation.isSuccess
 
 	return (
 		<div className="flex flex-col min-h-screen bg-background">
-			{/* Header */}
 			<header className="flex items-center gap-4 px-4 py-2 border-b border-border">
-				<button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors" aria-label="Retour">
+				<button 
+					onClick={onBack} 
+					className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors" 
+					aria-label="Retour"
+					disabled={isSubmitting}
+				>
 					<ArrowLeft className="w-5 h-5 text-foreground" />
 				</button>
 				<h1 className="text-xs font-semibold text-foreground">Nouveau signalement</h1>
-				{/* <div className="ml-auto">
-					<Button variant="outline" size="sm" className="text-xs px-3 py-1 h-8 bg-transparent">
-						FR
-					</Button>
-				</div> */}
 			</header>
 
-			{/* Form */}
 			<form onSubmit={handleSubmit} className="flex-1 flex flex-col p-6 gap-6">
-				{/* Location */}
+				{isSuccess && (
+					<Alert className="bg-green-50 border-green-200">
+						<CheckCircle2 className="h-4 w-4 text-green-600" />
+						<AlertDescription className="text-green-800">
+							Votre signalement a été soumis avec succès et enregistré sur la blockchain.
+						</AlertDescription>
+					</Alert>
+				)}
+
+				{submitMutation.isError && (
+					<Alert variant="destructive">
+						<AlertCircle className="h-4 w-4" />
+						<AlertDescription>
+							{(submitMutation.error as any)?.response?.data?.message || 
+							 "Une erreur est survenue lors de la soumission"}
+						</AlertDescription>
+					</Alert>
+				)}
+
 				<div className="space-y-2">
-					<Label htmlFor="location" className="text-xs font-bold flex items-center gap-2">
+					<Label htmlFor="zone" className="text-xs font-bold flex items-center gap-2">
 						<MapPin className="w-4 h-4 text-primary" />
-						Zone / Lieu
+						Zone / Lieu *
 					</Label>
 					<p className="text-xs text-muted-foreground">Sélectionnez le lieu de l'incident.</p>
-					<Select value={location} onValueChange={setLocation}>
+					
+					<Select value={zone} onValueChange={setZone} disabled={isSubmitting || zonesLoading}>
 						<SelectTrigger className="h-12 rounded-sm border border-border w-full">
-							<SelectValue placeholder="Sélectionner un lieu" />
+							<SelectValue placeholder={zonesLoading ? "Chargement des zones..." : "Sélectionner un lieu"} />
 						</SelectTrigger>
 						<SelectContent>
-							{LOCATIONS.map((loc) => (
-								<SelectItem key={loc} value={loc}>
-									{loc}
-								</SelectItem>
-							))}
+							{zones && zones.length > 0 ? (
+								zones.map((z) => (
+									<SelectItem key={z.value} value={z.value}>
+										{z.label}
+									</SelectItem>
+								))
+							) : (
+								<div className="p-2 text-xs text-muted-foreground text-center">
+									Aucune zone disponible
+								</div>
+							)}
 						</SelectContent>
 					</Select>
 					{showCustomInput && (
 						<Input
 							placeholder="Précisez le lieu..."
-							value={customLocation}
-							onChange={(e) => setCustomLocation(e.target.value)}
+							value={customZone}
+							onChange={(e) => setCustomZone(e.target.value)}
 							className="h-12 rounded-sm border border-border w-full mt-2"
+							disabled={isSubmitting}
+							required
 						/>
 					)}
 				</div>
 
-				{/* Time */}
 				<div className="space-y-2">
-					<Label htmlFor="time" className="text-xs font-bold flex items-center gap-2">
+					<Label htmlFor="incidentTime" className="text-xs font-bold flex items-center gap-2">
 						<Clock className="w-4 h-4 text-primary" />
-						Heure
+						Heure *
 					</Label>
 					<p className="text-xs text-muted-foreground">Sélectionnez l'heure de l'incident.</p>
 					<Input
-						id="time"
+						id="incidentTime"
 						type="time"
-						value={time}
-						onChange={(e) => setTime(e.target.value)}
+						value={incidentTime}
+						onChange={(e) => setIncidentTime(e.target.value)}
 						className="h-12 text-xs rounded-sm border border-border w-full"
+						disabled={isSubmitting}
+						required
 					/>
 				</div>
 
-				{/* Description */}
 				<div className="space-y-2">
 					<Label htmlFor="description" className="text-xs font-bold">
-						Description
+						Description *
 					</Label>
-					<p className="text-xs text-muted-foreground">Donnez une description de l'incident.</p>
+					<p className="text-xs text-muted-foreground">Donnez une description détaillée de l'incident.</p>
 					<div className="relative">
 						<Textarea
 							id="description"
-							placeholder="Décrivez l'incident..."
+							placeholder="Décrivez l'incident de manière détaillée..."
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
 							className="min-h-32 rounded-sm border border-border w-full text-xs resize-none pr-12"
+							disabled={isSubmitting}
+							required
 						/>
 						<button
 							type="button"
 							className="absolute right-0 top-0 p-2 rounded-lg hover:bg-secondary transition-colors"
 							aria-label="Dictée vocale"
+							disabled={isSubmitting}
 						>
 							<Mic className="w-5 h-5 text-primary" />
 						</button>
 					</div>
 				</div>
 
-				{/* Attachments */}
 				<div className="space-y-3">
-					<Label className="text-xs font-bold">Pièces jointes</Label>
+					<Label className="text-xs font-bold">Pièces jointes (optionnel)</Label>
 
-					{/* Attachment buttons */}
-					<div className="flex border-2 border-dashed border-border hover:border-primary hover:cursor-pointer w-full rounded-sm flex-1 items-center justify-center h-24 gap-3">
-						<UploadIcon/>
-						{/* <p className="text-xs text-muted-foreground">Ajouter des pièces jointes</p> */}
-					</div>
+					<input
+						ref={fileInputRef}
+						type="file"
+						multiple
+						accept="image/*,application/pdf"
+						onChange={handleFileChange}
+						className="hidden"
+						disabled={isSubmitting}
+					/>
 
-					{/* Attachment previews */}
-					{attachments.length > 0 && (
+					<button
+						type="button"
+						onClick={handleUploadClick}
+						disabled={isSubmitting || files.length >= 3}
+						className="flex border-2 border-dashed border-border hover:border-primary hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed w-full rounded-sm items-center justify-center h-24 gap-3 transition-colors"
+					>
+						{isProcessingFiles ? (
+							<>
+								<Loader2 className="w-6 h-6 text-primary animate-spin" />
+								<span className="text-xs text-muted-foreground">
+									Traitement des images...
+								</span>
+							</>
+						) : (
+							<>
+								<UploadIcon className="w-6 h-6 text-muted-foreground" />
+								<span className="text-xs text-muted-foreground">
+									{files.length >= 3 ? "Maximum 3 fichiers" : "Cliquez pour ajouter des fichiers"}
+								</span>
+							</>
+						)}
+					</button>
+
+					{files.length > 0 && (
 						<div className="flex flex-wrap gap-2">
-							{attachments.map((att, index) => (
-								<div key={index} className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg">
-									{att.type === "photo" ? (
-										<Camera className="w-4 h-4 text-primary" />
-									) : (
-										<Video className="w-4 h-4 text-primary" />
-									)}
-									<span className="text-xs text-secondary-foreground">{att.name}</span>
+							{files.map((file, index) => (
+								<div key={index} className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg max-w-full">
+									<span className="text-xs text-secondary-foreground truncate flex-1">
+										{file.name}
+									</span>
+									<span className="text-xs text-muted-foreground">
+										{(file.size / 1024).toFixed(0)}KB
+									</span>
 									<button
 										type="button"
-										onClick={() => handleRemoveAttachment(index)}
+										onClick={() => handleRemoveFile(index)}
 										className="p-0.5 rounded hover:bg-primary/10"
+										disabled={isSubmitting}
 									>
 										<X className="w-3 h-3 text-muted-foreground" />
 									</button>
@@ -173,16 +314,37 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 						</div>
 					)}
 
-					<p className="text-xs text-muted-foreground">Maximum 3 fichiers, 5MB par fichier</p>
+					<p className="text-xs text-muted-foreground">
+						Maximum 3 fichiers, 5MB par fichier. Formats acceptés: images, PDF. Les métadonnées des images sont automatiquement supprimées.
+					</p>
 				</div>
 
-				{/* Spacer */}
 				<div className="flex-1" />
 
-				{/* Submit Button */}
-				<Button type="submit" size="lg" className="w-full py-2  bg-[#005AFF] hover:bg-[#005AFF]/90 rounded-full h-10 text-sm font-semibold">
-					Envoyer anonymement
+				<Button 
+					type="submit" 
+					size="lg" 
+					className="w-full py-2 bg-[#005AFF] hover:bg-[#005AFF]/90 rounded-full h-10 text-sm font-semibold"
+					disabled={isSubmitting || isSuccess}
+				>
+					{isSubmitting ? (
+						<>
+							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+							Envoi en cours...
+						</>
+					) : isSuccess ? (
+						<>
+							<CheckCircle2 className="w-4 h-4 mr-2" />
+							Envoyé avec succès
+						</>
+					) : (
+						"Envoyer anonymement"
+					)}
 				</Button>
+
+				<p className="text-xs text-muted-foreground text-center">
+					Votre signalement sera analysé automatiquement et enregistré sur la blockchain.
+				</p>
 			</form>
 		</div>
 	)
