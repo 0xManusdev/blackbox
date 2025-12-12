@@ -18,10 +18,10 @@ export default function AdminLoginPage() {
 
 	// Redirect to dashboard if already logged in
 	useEffect(() => {
-		if (currentUser) {
+		if (!checkingAuth && currentUser) {
 			router.replace("/admin/dashboard")
 		}
-	}, [currentUser, router])
+	}, [currentUser, checkingAuth, router])
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault()
