@@ -86,6 +86,9 @@ pnpm start        # lancer le build en production
 - URL par défaut en dev : http://localhost:3000.
 - URL de production : https://blackbox-report.vercel.app/
 
+## Informations de connexion admin 
+**Email** : dupont@gmail.com
+**Password** : 12345678
 
 
 
