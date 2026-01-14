@@ -12,6 +12,7 @@ import { ArrowLeft, Mic, X, MapPin, Clock, UploadIcon, Loader2, CheckCircle2, Al
 import { useZones, useSubmitReport } from "@/hooks/use-reports"
 import { removeMetadataFromFiles } from "@/lib/remove-metadata"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslations } from 'next-intl'
 
 interface ReportFormScreenProps {
 	onBack: () => void
@@ -19,6 +20,7 @@ interface ReportFormScreenProps {
 }
 
 export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
+	const t = useTranslations('reportForm')
 	const [zone, setZone] = useState("")
 	const [customZone, setCustomZone] = useState("")
 	const [incidentTime, setIncidentTime] = useState(() => {
@@ -43,23 +45,22 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					if (file.size > 5 * 1024 * 1024) {
 						toast({
 							variant: "destructive",
-							title: "Fichier trop volumineux",
-							description: `Le fichier ${file.name} dépasse 5MB`
+							title: t('attachments.tooLarge'),
+							description: t('attachments.tooLargeDesc', { fileName: file.name })
 						})
 						return false
 					}
 					return true
 				})
 				
-				// Remove metadata from images before setting state
 				const cleanedFiles = await removeMetadataFromFiles(validFiles)
 				setFiles(cleanedFiles)
 			} catch (error) {
 				console.error('Error processing files:', error)
 				toast({
 					variant: "destructive",
-					title: "Erreur",
-					description: "Erreur lors du traitement des fichiers"
+					title: t('attachments.error'),
+					description: t('attachments.errorDesc')
 				})
 			} finally {
 				setIsProcessingFiles(false)
@@ -81,8 +82,8 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 		if (!zone) {
 			toast({
 				variant: "destructive",
-				title: "Champ requis",
-				description: "Veuillez sélectionner une zone"
+				title: t('validation.zoneRequired'),
+				description: t('validation.zoneRequired')
 			})
 			return
 		}
@@ -90,8 +91,8 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 		if (zone === "AUTRE" && !customZone.trim()) {
 			toast({
 				variant: "destructive",
-				title: "Champ requis",
-				description: "Veuillez préciser la zone personnalisée"
+				title: t('validation.customZoneRequired'),
+				description: t('validation.customZoneRequired')
 			})
 			return
 		}
@@ -99,8 +100,8 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 		if (!incidentTime) {
 			toast({
 				variant: "destructive",
-				title: "Champ requis",
-				description: "Veuillez sélectionner l'heure de l'incident"
+				title: t('validation.timeRequired'),
+				description: t('validation.timeRequired')
 			})
 			return
 		}
@@ -108,8 +109,8 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 		if (!description.trim()) {
 			toast({
 				variant: "destructive",
-				title: "Champ requis",
-				description: "Veuillez décrire l'incident"
+				title: t('validation.descriptionRequired'),
+				description: t('validation.descriptionRequired')
 			})
 			return
 		}
@@ -129,8 +130,8 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				onError: (error: any) => {
 					toast({
 						variant: "destructive",
-						title: "Erreur de soumission",
-						description: error.response?.data?.message || "Une erreur est survenue lors de la soumission"
+						title: t('submit.error'),
+						description: error.response?.data?.message || t('submit.error')
 					})
 				},
 			}
@@ -147,12 +148,12 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				<button 
 					onClick={onBack} 
 					className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors" 
-					aria-label="Retour"
+					aria-label={t('back')}
 					disabled={isSubmitting}
 				>
 					<ArrowLeft className="w-5 h-5 text-foreground" />
 				</button>
-				<h1 className="text-xs font-semibold text-foreground">Nouveau signalement</h1>
+				<h1 className="text-xs font-semibold text-foreground">{t('title')}</h1>
 			</header>
 
 			<form onSubmit={handleSubmit} className="flex-1 flex flex-col p-6 gap-6">
@@ -160,7 +161,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					<Alert className="bg-green-50 border-green-200">
 						<CheckCircle2 className="h-4 w-4 text-green-600" />
 						<AlertDescription className="text-green-800">
-							Votre signalement a été soumis avec succès et enregistré sur la blockchain.
+							{t('submit.success')}
 						</AlertDescription>
 					</Alert>
 				)}
@@ -169,8 +170,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					<Alert variant="destructive">
 						<AlertCircle className="h-4 w-4" />
 						<AlertDescription>
-							{(submitMutation.error as any)?.response?.data?.message || 
-							 "Une erreur est survenue lors de la soumission"}
+							{(submitMutation.error as any)?.response?.data?.message || t('submit.error')}
 						</AlertDescription>
 					</Alert>
 				)}
@@ -178,13 +178,13 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				<div className="space-y-2">
 					<Label htmlFor="zone" className="text-xs font-bold flex items-center gap-2">
 						<MapPin className="w-4 h-4 text-primary" />
-						Zone / Lieu *
+						{t('zone.label')} {t('zone.required')}
 					</Label>
-					<p className="text-xs text-muted-foreground">Sélectionnez le lieu de l'incident.</p>
+					<p className="text-xs text-muted-foreground">{t('zone.description')}</p>
 					
 					<Select value={zone} onValueChange={setZone} disabled={isSubmitting || zonesLoading}>
 						<SelectTrigger className="h-12 rounded-sm border border-border w-full">
-							<SelectValue placeholder={zonesLoading ? "Chargement des zones..." : "Sélectionner un lieu"} />
+							<SelectValue placeholder={zonesLoading ? t('zone.loading') : t('zone.placeholder')} />
 						</SelectTrigger>
 						<SelectContent>
 							{zones && zones.length > 0 ? (
@@ -195,14 +195,14 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 								))
 							) : (
 								<div className="p-2 text-xs text-muted-foreground text-center">
-									Aucune zone disponible
+									{t('zone.noData')}
 								</div>
 							)}
 						</SelectContent>
 					</Select>
 					{showCustomInput && (
 						<Input
-							placeholder="Précisez le lieu..."
+							placeholder={t('zone.customPlaceholder')}
 							value={customZone}
 							onChange={(e) => setCustomZone(e.target.value)}
 							className="h-12 rounded-sm border border-border w-full mt-2"
@@ -215,9 +215,9 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				<div className="space-y-2">
 					<Label htmlFor="incidentTime" className="text-xs font-bold flex items-center gap-2">
 						<Clock className="w-4 h-4 text-primary" />
-						Heure *
+						{t('time.label')} {t('time.required')}
 					</Label>
-					<p className="text-xs text-muted-foreground">Sélectionnez l'heure de l'incident.</p>
+					<p className="text-xs text-muted-foreground">{t('time.description')}</p>
 					<Input
 						id="incidentTime"
 						type="time"
@@ -231,13 +231,13 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 
 				<div className="space-y-2">
 					<Label htmlFor="description" className="text-xs font-bold">
-						Description *
+						{t('description.label')} {t('description.required')}
 					</Label>
-					<p className="text-xs text-muted-foreground">Donnez une description détaillée de l'incident.</p>
+					<p className="text-xs text-muted-foreground">{t('description.description')}</p>
 					<div className="relative">
 						<Textarea
 							id="description"
-							placeholder="Décrivez l'incident de manière détaillée..."
+							placeholder={t('description.placeholder')}
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
 							className="min-h-32 rounded-sm border border-border w-full text-xs resize-none pr-12"
@@ -247,7 +247,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 						<button
 							type="button"
 							className="absolute right-0 top-0 p-2 rounded-lg hover:bg-secondary transition-colors"
-							aria-label="Dictée vocale"
+							aria-label={t('description.voiceLabel')}
 							disabled={isSubmitting}
 						>
 							<Mic className="w-5 h-5 text-primary" />
@@ -256,7 +256,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 				</div>
 
 				<div className="space-y-3">
-					<Label className="text-xs font-bold">Pièces jointes (optionnel)</Label>
+					<Label className="text-xs font-bold">{t('attachments.label')}</Label>
 
 					<input
 						ref={fileInputRef}
@@ -278,14 +278,14 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 							<>
 								<Loader2 className="w-6 h-6 text-primary animate-spin" />
 								<span className="text-xs text-muted-foreground">
-									Traitement des images...
+									{t('attachments.processing')}
 								</span>
 							</>
 						) : (
 							<>
 								<UploadIcon className="w-6 h-6 text-muted-foreground" />
 								<span className="text-xs text-muted-foreground">
-									{files.length >= 3 ? "Maximum 3 fichiers" : "Cliquez pour ajouter des fichiers"}
+									{files.length >= 3 ? t('attachments.maxFiles') : t('attachments.upload')}
 								</span>
 							</>
 						)}
@@ -315,7 +315,7 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					)}
 
 					<p className="text-xs text-muted-foreground">
-						Maximum 3 fichiers, 5MB par fichier. Formats acceptés: images, PDF. Les métadonnées des images sont automatiquement supprimées.
+						{t('attachments.info')}
 					</p>
 				</div>
 
@@ -330,20 +330,20 @@ export function ReportFormScreen({ onBack, onSubmit }: ReportFormScreenProps) {
 					{isSubmitting ? (
 						<>
 							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-							Envoi en cours...
+							{t('submit.sending')}
 						</>
 					) : isSuccess ? (
 						<>
 							<CheckCircle2 className="w-4 h-4 mr-2" />
-							Envoyé avec succès
+							{t('submit.sent')}
 						</>
 					) : (
-						"Envoyer anonymement"
+						t('submit.sendAnonymously')
 					)}
 				</Button>
 
 				<p className="text-xs text-muted-foreground text-center">
-					Votre signalement sera analysé automatiquement et enregistré sur la blockchain.
+					{t('submit.info')}
 				</p>
 			</form>
 		</div>

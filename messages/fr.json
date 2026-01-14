@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "title": "Blackbox - Plateforme de signalement AIGE",
+    "description": "Signalez un incident en toute confidentialité. Votre identité n'est jamais enregistrée."
+  },
+  "home": {
+    "logo": "Blackbox",
+    "title": "Plateforme {anonymous} de signalement de l'AIGE.",
+    "anonymous": "anonyme",
+    "subtitle": "Signalez un incident en toute confidentialité. Nous ne stockons aucune information sur votre identité.",
+    "startReport": "Faire un signalement"
+  },
+  "reportForm": {
+    "title": "Nouveau signalement",
+    "back": "Retour",
+    "zone": {
+      "label": "Zone / Lieu",
+      "required": "*",
+      "description": "Sélectionnez le lieu de l'incident.",
+      "placeholder": "Sélectionner un lieu",
+      "loading": "Chargement des zones...",
+      "noData": "Aucune zone disponible",
+      "customPlaceholder": "Précisez le lieu..."
+    },
+    "time": {
+      "label": "Heure",
+      "required": "*",
+      "description": "Sélectionnez l'heure de l'incident."
+    },
+    "description": {
+      "label": "Description",
+      "required": "*",
+      "description": "Donnez une description détaillée de l'incident.",
+      "placeholder": "Décrivez l'incident de manière détaillée...",
+      "voiceLabel": "Dictée vocale"
+    },
+    "attachments": {
+      "label": "Pièces jointes (optionnel)",
+      "processing": "Traitement des images...",
+      "upload": "Cliquez pour ajouter des fichiers",
+      "maxFiles": "Maximum 3 fichiers",
+      "info": "Maximum 3 fichiers, 5MB par fichier. Formats acceptés: images, PDF. Les métadonnées des images sont automatiquement supprimées.",
+      "tooLarge": "Fichier trop volumineux",
+      "tooLargeDesc": "Le fichier {fileName} dépasse 5MB",
+      "error": "Erreur",
+      "errorDesc": "Erreur lors du traitement des fichiers"
+    },
+    "submit": {
+      "sending": "Envoi en cours...",
+      "sent": "Envoyé avec succès",
+      "sendAnonymously": "Envoyer anonymement",
+      "info": "Votre signalement sera analysé automatiquement et enregistré sur la blockchain.",
+      "success": "Votre signalement a été soumis avec succès et enregistré sur la blockchain.",
+      "error": "Une erreur est survenue lors de la soumission"
+    },
+    "validation": {
+      "zoneRequired": "Veuillez sélectionner une zone",
+      "customZoneRequired": "Veuillez préciser la zone personnalisée",
+      "timeRequired": "Veuillez sélectionner l'heure de l'incident",
+      "descriptionRequired": "Veuillez décrire l'incident"
+    }
+  },
+  "confirmation": {
+    "title": "Signalement envoyé !",
+    "subtitle": "Votre signalement a été enregistré de manière sécurisée sur la blockchain",
+    "reportNumber": "Numéro de signalement",
+    "saveNumber": "Conservez ce numéro pour suivre votre signalement",
+    "details": "Détails du signalement",
+    "zone": "Zone",
+    "incidentTime": "Heure de l'incident",
+    "classification": "Classification",
+    "severity": "Sévérité",
+    "severityLevels": {
+      "high": "Haute",
+      "medium": "Moyenne",
+      "low": "Faible"
+    },
+    "attachments": "Pièces jointes ({count})",
+    "attachmentAlt": "Pièce jointe {index}",
+    "blockchain": {
+      "title": "Preuve blockchain",
+      "verifying": "Vérification en cours...",
+      "integrityValid": "Intégrité vérifiée ✓",
+      "integrityInvalid": "Intégrité compromise ⚠️",
+      "validDesc": "Les données n'ont pas été modifiées depuis leur enregistrement",
+      "invalidDesc": "Les données ont été altérées après leur enregistrement",
+      "txHash": "Hash de transaction",
+      "contentHash": "Hash du contenu",
+      "blockNumber": "Numéro de bloc",
+      "viewOnEtherscan": "Voir sur Etherscan"
+    },
+    "info": "Votre signalement a été analysé automatiquement par notre IA et classifié. Les autorités compétentes ont été notifiées.",
+    "backHome": "Retour à l'accueil",
+    "thanks": "Merci pour votre contribution à la sécurité de l'AIGE",
+    "errors": {
+      "invalidId": "Identifiant de rapport invalide.",
+      "loadError": "Impossible de charger les informations du rapport."
+    }
+  }
+}

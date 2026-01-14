@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, ExternalLink, Shield, Clock, MapPin, FileText, Loader2, AlertCircle } from "lucide-react"
 import { useReport, useVerifyReport } from "@/hooks/use-reports"
+import { useTranslations } from 'next-intl'
 
 interface ConfirmationScreenProps {
 	reportId: number
@@ -12,30 +13,31 @@ interface ConfirmationScreenProps {
 }
 
 export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenProps) {
-	// Validate reportId before attempting to fetch data
+	const t = useTranslations('confirmation')
+	const { data: report, isLoading: reportLoading, isError: reportError } = useReport(reportId)
+	const { data: verification, isLoading: verifyLoading } = useVerifyReport(reportId)
+
 	if (!reportId) {
 		return (
 			<div className="flex flex-col items-center justify-center min-h-screen bg-background p-6">
 				<Alert variant="destructive" className="max-w-md">
 					<AlertCircle className="h-4 w-4" />
 					<AlertDescription>
-						Identifiant de rapport invalide.
+						{t('errors.invalidId')}
 					</AlertDescription>
 				</Alert>
 				<Button onClick={onBackHome} className="mt-4">
-					Retour à l'accueil
+					{t('backHome')}
 				</Button>
 			</div>
 		)
 	}
-	const { data: report, isLoading: reportLoading, isError: reportError } = useReport(reportId)
-	const { data: verification, isLoading: verifyLoading } = useVerifyReport(reportId)
 
 	if (reportLoading) {
 		return (
 			<div className="flex flex-col items-center justify-center min-h-screen bg-background p-6">
 				<Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-				<p className="text-sm text-muted-foreground">Chargement des informations...</p>
+				<p className="text-sm text-muted-foreground">{t('blockchain.verifying')}</p>
 			</div>
 		)
 	}
@@ -46,11 +48,11 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 				<Alert variant="destructive" className="max-w-md">
 					<AlertCircle className="h-4 w-4" />
 					<AlertDescription>
-						Impossible de charger les informations du rapport.
+						{t('errors.loadError')}
 					</AlertDescription>
 				</Alert>
 				<Button onClick={onBackHome} className="mt-4">
-					Retour à l'accueil
+					{t('backHome')}
 				</Button>
 			</div>
 		)
@@ -65,15 +67,6 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 		}
 	}
 
-	const getSeverityLabel = (severity: string) => {
-		switch (severity) {
-			case "high": return "Haute"
-			case "medium": return "Moyenne"
-			case "low": return "Faible"
-			default: return severity
-		}
-	}
-
 	return (
 		<div className="flex flex-col min-h-screen bg-background">
 			<header className="flex flex-col items-center gap-4 px-6 py-8 border-b border-border bg-gradient-to-b from-green-50 to-background dark:from-green-950/20">
@@ -81,29 +74,29 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 					<CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
 				</div>
 				<div className="text-center space-y-2">
-					<h1 className="text-lg font-bold text-foreground">Signalement envoyé !</h1>
+					<h1 className="text-lg font-bold text-foreground">{t('title')}</h1>
 					<p className="text-xs text-muted-foreground max-w-sm">
-						Votre signalement a été enregistré de manière sécurisée sur la blockchain
+						{t('subtitle')}
 					</p>
 				</div>
 			</header>
 
 			<div className="flex-1 p-6 space-y-6">
 				<div className="bg-muted/50 rounded-lg p-4 text-center">
-					<p className="text-xs text-muted-foreground mb-1">Numéro de signalement</p>
+					<p className="text-xs text-muted-foreground mb-1">{t('reportNumber')}</p>
 					<p className="text-2xl font-bold text-foreground">#{report.id}</p>
 					<p className="text-xs text-muted-foreground mt-1">
-						Conservez ce numéro pour suivre votre signalement
+						{t('saveNumber')}
 					</p>
 				</div>
 
 				<div className="space-y-4">
-					<h2 className="text-sm font-bold text-foreground">Détails du signalement</h2>
+					<h2 className="text-sm font-bold text-foreground">{t('details')}</h2>
 
 					<div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
 						<MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
 						<div className="flex-1 min-w-0">
-							<p className="text-xs font-medium text-foreground">Zone</p>
+							<p className="text-xs font-medium text-foreground">{t('zone')}</p>
 							<p className="text-xs text-muted-foreground">
 								{report.zone}
 								{report.customZone && ` - ${report.customZone}`}
@@ -114,7 +107,7 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 					<div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
 						<Clock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
 						<div className="flex-1 min-w-0">
-							<p className="text-xs font-medium text-foreground">Heure de l'incident</p>
+							<p className="text-xs font-medium text-foreground">{t('incidentTime')}</p>
 							<p className="text-xs text-muted-foreground">{report.incidentTime}</p>
 						</div>
 					</div>
@@ -122,13 +115,13 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 					<div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
 						<FileText className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
 						<div className="flex-1 min-w-0">
-							<p className="text-xs font-medium text-foreground mb-2">Classification</p>
+							<p className="text-xs font-medium text-foreground mb-2">{t('classification')}</p>
 							<div className="flex gap-2 flex-wrap">
 								<Badge variant="secondary" className="text-xs">
 									{report.category}
 								</Badge>
 								<Badge className={`text-xs text-white ${getSeverityColor(report.severity)}`}>
-									Sévérité: {getSeverityLabel(report.severity)}
+									{t('severity')}: {t(`severityLevels.${report.severity}` as any) || report.severity}
 								</Badge>
 							</div>
 						</div>
@@ -137,7 +130,7 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 					{report.attachments && report.attachments.length > 0 && (
 						<div className="p-3 bg-muted/30 rounded-lg">
 							<p className="text-xs font-medium text-foreground mb-2">
-								Pièces jointes ({report.attachments.length})
+								{t('attachments', { count: report.attachments.length })}
 							</p>
 							<div className="grid grid-cols-3 gap-2">
 								{report.attachments.map((url, index) => (
@@ -150,7 +143,7 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 									>
 										<img 
 											src={url} 
-											alt={`Pièce jointe ${index + 1}`}
+											alt={t('attachmentAlt', { index: index + 1 })}
 											className="w-full h-full object-cover"
 										/>
 									</a>
@@ -163,13 +156,13 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 				<div className="space-y-4">
 					<h2 className="text-sm font-bold text-foreground flex items-center gap-2">
 						<Shield className="w-4 h-4 text-primary" />
-						Preuve blockchain
+						{t('blockchain.title')}
 					</h2>
 
 					{verifyLoading ? (
 						<div className="p-4 bg-muted/30 rounded-lg flex items-center gap-3">
 							<Loader2 className="w-5 h-5 text-primary animate-spin" />
-							<p className="text-xs text-muted-foreground">Vérification en cours...</p>
+							<p className="text-xs text-muted-foreground">{t('blockchain.verifying')}</p>
 						</div>
 					) : verification ? (
 						<div className="space-y-3">
@@ -190,33 +183,33 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 											: "text-red-800 dark:text-red-300"
 									}`}>
 										{verification.integrityValid 
-											? "Intégrité vérifiée ✓" 
-											: "Intégrité compromise ⚠️"}
+											? t('blockchain.integrityValid') 
+											: t('blockchain.integrityInvalid')}
 									</p>
 								</div>
 								<p className="text-xs text-muted-foreground">
 									{verification.integrityValid
-										? "Les données n'ont pas été modifiées depuis leur enregistrement"
-										: "Les données ont été altérées après leur enregistrement"}
+										? t('blockchain.validDesc')
+										: t('blockchain.invalidDesc')}
 								</p>
 							</div>
 
 							<div className="p-4 bg-muted/30 rounded-lg space-y-3">
 								<div>
-									<p className="text-xs font-medium text-foreground mb-1">Hash de transaction</p>
+									<p className="text-xs font-medium text-foreground mb-1">{t('blockchain.txHash')}</p>
 									<p className="text-xs text-muted-foreground font-mono break-all">
 										{report.blockchain?.txHash || verification.blockchainTxHash}
 									</p>
 								</div>
 								<div>
-									<p className="text-xs font-medium text-foreground mb-1">Hash du contenu</p>
+									<p className="text-xs font-medium text-foreground mb-1">{t('blockchain.contentHash')}</p>
 									<p className="text-xs text-muted-foreground font-mono break-all">
 										{verification.storedHash}
 									</p>
 								</div>
 								{report.blockchain?.blockNumber && (
 									<div>
-										<p className="text-xs font-medium text-foreground mb-1">Numéro de bloc</p>
+										<p className="text-xs font-medium text-foreground mb-1">{t('blockchain.blockNumber')}</p>
 										<p className="text-xs text-muted-foreground">
 											{report.blockchain.blockNumber}
 										</p>
@@ -233,7 +226,7 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 								>
 									<ExternalLink className="w-4 h-4 text-primary" />
 									<span className="text-xs font-medium text-primary">
-										Voir sur Etherscan
+										{t('blockchain.viewOnEtherscan')}
 									</span>
 								</a>
 							)}
@@ -247,7 +240,7 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 								className="flex items-center gap-2 text-xs text-primary hover:underline"
 							>
 								<ExternalLink className="w-3 h-3" />
-								Voir sur Etherscan
+								{t('blockchain.viewOnEtherscan')}
 							</a>
 						</div>
 					)}
@@ -255,8 +248,7 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 
 				<Alert>
 					<AlertDescription className="text-xs">
-						Votre signalement a été analysé automatiquement par notre IA et classifié. 
-						Les autorités compétentes ont été notifiées.
+						{t('info')}
 					</AlertDescription>
 				</Alert>
 			</div>
@@ -267,10 +259,10 @@ export function ConfirmationScreen({ reportId, onBackHome }: ConfirmationScreenP
 					onClick={onBackHome}
 					className="w-full bg-[#005AFF] hover:bg-[#005AFF]/90 rounded-full"
 				>
-					Retour à l'accueil
+					{t('backHome')}
 				</Button>
 				<p className="text-xs text-muted-foreground text-center">
-					Merci pour votre contribution à la sécurité de l'AIGE
+					{t('thanks')}
 				</p>
 			</footer>
 		</div>

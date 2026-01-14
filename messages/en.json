@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "title": "Blackbox - AIGE Reporting Platform",
+    "description": "Report an incident confidentially. Your identity is never recorded."
+  },
+  "home": {
+    "logo": "Blackbox",
+    "title": "{anonymous} reporting platform of AIGE.",
+    "anonymous": "Anonymous",
+    "subtitle": "Report an incident with complete confidentiality. We do not store any information about your identity.",
+    "startReport": "Make a report"
+  },
+  "reportForm": {
+    "title": "New report",
+    "back": "Back",
+    "zone": {
+      "label": "Zone / Location",
+      "required": "*",
+      "description": "Select the incident location.",
+      "placeholder": "Select a location",
+      "loading": "Loading zones...",
+      "noData": "No zones available",
+      "customPlaceholder": "Specify location..."
+    },
+    "time": {
+      "label": "Time",
+      "required": "*",
+      "description": "Select the incident time."
+    },
+    "description": {
+      "label": "Description",
+      "required": "*",
+      "description": "Provide a detailed description of the incident.",
+      "placeholder": "Describe the incident in detail...",
+      "voiceLabel": "Voice dictation"
+    },
+    "attachments": {
+      "label": "Attachments (optional)",
+      "processing": "Processing images...",
+      "upload": "Click to add files",
+      "maxFiles": "Maximum 3 files",
+      "info": "Maximum 3 files, 5MB per file. Accepted formats: images, PDF. Image metadata is automatically removed.",
+      "tooLarge": "File too large",
+      "tooLargeDesc": "File {fileName} exceeds 5MB",
+      "error": "Error",
+      "errorDesc": "Error processing files"
+    },
+    "submit": {
+      "sending": "Sending...",
+      "sent": "Successfully sent",
+      "sendAnonymously": "Submit anonymously",
+      "info": "Your report will be automatically analyzed and recorded on the blockchain.",
+      "success": "Your report has been successfully submitted and recorded on the blockchain.",
+      "error": "An error occurred during submission"
+    },
+    "validation": {
+      "zoneRequired": "Please select a zone",
+      "customZoneRequired": "Please specify the custom zone",
+      "timeRequired": "Please select the incident time",
+      "descriptionRequired": "Please describe the incident"
+    }
+  },
+  "confirmation": {
+    "title": "Report sent!",
+    "subtitle": "Your report has been securely recorded on the blockchain",
+    "reportNumber": "Report number",
+    "saveNumber": "Keep this number to track your report",
+    "details": "Report details",
+    "zone": "Zone",
+    "incidentTime": "Incident time",
+    "classification": "Classification",
+    "severity": "Severity",
+    "severityLevels": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "attachments": "Attachments ({count})",
+    "attachmentAlt": "Attachment {index}",
+    "blockchain": {
+      "title": "Blockchain proof",
+      "verifying": "Verifying...",
+      "integrityValid": "Integrity verified ✓",
+      "integrityInvalid": "Integrity compromised ⚠️",
+      "validDesc": "Data has not been modified since recording",
+      "invalidDesc": "Data has been altered after recording",
+      "txHash": "Transaction hash",
+      "contentHash": "Content hash",
+      "blockNumber": "Block number",
+      "viewOnEtherscan": "View on Etherscan"
+    },
+    "info": "Your report has been automatically analyzed by our AI and classified. The relevant authorities have been notified.",
+    "backHome": "Back to home",
+    "thanks": "Thank you for your contribution to AIGE security",
+    "errors": {
+      "invalidId": "Invalid report ID.",
+      "loadError": "Unable to load report information."
+    }
+  }
+}
